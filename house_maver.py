@@ -33,10 +33,11 @@ def crawl(url):
     return info
 
 
-def calculation_rent(house):
+def calculation_noi(budget, house):
     house[['price', 'rent', 'noi']] = house[['price', 'rent', 'noi']].astype(int)
     house[['cap']] = house[['cap']].astype(float)
-    house = house.sort_values(['cap'], ascending=[False]).reset_index(drop=True)
+    # house = house[house['price'] <= budget]
+    # house = house.sort_values(['cap'], ascending=[False]).reset_index(drop=True)
     print(house)
     price = house['price'].tolist()
     # print('price', price)
@@ -47,7 +48,6 @@ def calculation_rent(house):
     noi = house['noi'].tolist()
     # print('noi', noi)
 
-    budget = 300000
     print('budget $%d' % budget)
     dp = [[0 for i in range(budget + 1)] for x in range(len(price))]
     # print(dp)
@@ -59,38 +59,85 @@ def calculation_rent(house):
                 dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - price[i]] + noi[i])
     # print(dp)
     print('*' * 60, '\n')
-    res = dp[-1][-1]
-    print('Profit:', res)
+    res_noi = dp[-1][-1]
+    print('res_noi:', res_noi)  # 2113
+
     for i in range(len(noi), -1, -1):
-        # print('i', i)
-        if res <= 0:
-            break
-        if res == dp[i - 1][budget]:
+        if res_noi == dp[i - 1][budget]:
             continue
         else:
             price_include = price[i]
             noi_include = noi[i]
             # print('price_include', price_include, 'noi_include', noi_include)
-            res = res - noi[i]
+            res_noi = res_noi - noi[i]
             budget -= price[i]
-            # print('res', res, 'budget', budget)
+            # print('res_noi', res_noi, 'budget', budget)
 
             list = house.iloc[i].tolist()
-            print(list)
-    print('Rest budget:', budget)
-    return
+            print(list, '\n')
+    # print('Rest budget:', budget)
+    return budget
 
+def calculation_rent(budget, house):
+    house[['price', 'rent', 'noi']] = house[['price', 'rent', 'noi']].astype(int)
+    house[['cap']] = house[['cap']].astype(float)
+    # house = house[house['price'] <= budget]
+    # house = house.sort_values(['cap'], ascending=[False]).reset_index(drop=True)
+    # print(house)
+    price = house['price'].tolist()
+    # print('price', price)
+    capRate = house['cap'].tolist()
+    # print('cap rate', capRate)
+    rent = house['rent'].tolist()
+    # print('rent', rent)
+    noi = house['noi'].tolist()
+    # print('noi', noi)
+
+    # print('budget $%d' % budget)
+    dp = [[0 for i in range(budget + 1)] for x in range(len(price))]
+    # print(dp)
+    for i in range(len(price)):
+        for j in range(budget + 1):
+            if j < price[i]:
+                dp[i][j] = dp[i - 1][j]  # 不放
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - price[i]] + rent[i])
+    # print(dp)
+    print('*' * 60, '\n')
+    res_rent = dp[-1][-1]
+    print('res_rent:', res_rent)  # 2113
+
+    for i in range(len(rent), -1, -1):
+        if res_rent == dp[i - 1][budget]:
+            continue
+        else:
+            price_include = price[i]
+            rent_include = rent[i]
+            # print('price_include', price_include, 'rent_include', rent_include)
+            res_rent = res_rent - rent[i]
+            budget -= price[i]
+            # print('res_rent', res_rent, 'budget', budget)
+
+            list = house.iloc[i].tolist()
+            print(list, '\n')
+    # print('Rest budget:', budget)
+    return budget
 
 if __name__ == '__main__':
+    budget = 300000
     url = 'https://www.maverickinvestorgroup.com/investment-properties'
     info = crawl(url)
     house = pd.DataFrame(info)
+    house[['price', 'rent', 'noi']] = house[['price', 'rent', 'noi']].astype(int)
+    house[['cap']] = house[['cap']].astype(float)
     # print(house)
-    print(calculation_rent(house))
+    print('Rest budget:', calculation_noi(budget, house))
 
-    # print(calculation_rent())
-    # print('*' * 60, '\n')
-    #
-    # house = pd.DataFrame([list1, list2, list3, list4])
-    # house = house.sort_values(['cap rate'], ascending=[False]).reset_index(drop=True)
-    # return (house, '\n')
+    print('*' * 60, '\n')
+    print('Rest budget:', calculation_rent(budget, house))
+
+    print('*' * 60, '\n')
+    print('Based on cap rate:')
+    house = house[house['price'] <= budget]
+    house_cap = house.sort_values(['cap'], ascending=[False]).reset_index(drop=True)
+    print(house_cap.head())
