@@ -3,7 +3,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 import codecs
-# 爬虫函数
+# 爬虫函数 https://pythonmana.com/2021/02/20210202184220872M.html
 def crawl(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '

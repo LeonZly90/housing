@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-
+import lxml
 
 def crawl(url):
     headers = {
@@ -17,7 +17,7 @@ def crawl(url):
 
         get_price = tag.find_all('div', 'property-price')[0].get_text().replace('\n', '').replace('$', '').replace(',',
                                                                                                                    '')
-        # print(get_price)
+        print(get_price)
 
         get_cap = tag.find_all('div', 'property-cap')[0].get_text().replace('Cap Rate: ', '').replace('%', '')
         # print(get_cap)
@@ -29,7 +29,7 @@ def crawl(url):
         # print(get_noi)
 
         info.append({'address': get_address, 'price': get_price, 'cap': get_cap, 'rent': get_rent, 'noi': get_noi})
-        # print(info)
+    print(info)
     return info
 
 
@@ -103,7 +103,7 @@ def calculation_rent(budget, house):
             else:
                 dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - price[i]] + rent[i])
     # print(dp)
-    print('*' * 60, '\n')
+    # print('*' * 60, '\n')
     res_rent = dp[-1][-1]
     print('res_rent:', res_rent)  # 2113
 
@@ -124,7 +124,7 @@ def calculation_rent(budget, house):
     return budget
 
 if __name__ == '__main__':
-    budget = 300000
+    budget = 350000
     url = 'https://www.maverickinvestorgroup.com/investment-properties'
     info = crawl(url)
     house = pd.DataFrame(info)
@@ -141,3 +141,11 @@ if __name__ == '__main__':
     house = house[house['price'] <= budget]
     house_cap = house.sort_values(['cap'], ascending=[False]).reset_index(drop=True)
     print(house_cap.head())
+
+    print('\n', 'Based on house_price:')
+    house_price = house.sort_values(['price'], ascending=[False]).reset_index(drop=True)
+    print(house_price.head())
+
+    print('\n', 'Based on house_noi:')
+    house_noi = house.sort_values(['noi'], ascending=[False]).reset_index(drop=True)
+    print(house_noi.head())
